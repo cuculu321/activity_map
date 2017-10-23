@@ -21,6 +21,16 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import android.content.Context;
+import android.content.res.AssetManager;
+import android.util.Log;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.StringTokenizer;
+
 public class MapsActivity extends FragmentActivity
         implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, LocationListener {
 
@@ -36,6 +46,7 @@ public class MapsActivity extends FragmentActivity
         setContentView(R.layout.activity_maps);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
     }
 
     @Override
@@ -64,6 +75,16 @@ public class MapsActivity extends FragmentActivity
             setDefaultLocation();
             confirmPermission();
         }
+
+        //CSVの情報取得
+        CSVParser parser = new CSVParser();
+        Context context = getApplicationContext();
+        parser.parse(context);
+/*
+        mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(context., 10))
+                .title("Hello world"));
+  */
     }
 
     @Override
@@ -172,5 +193,33 @@ public class MapsActivity extends FragmentActivity
         LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.addMarker(new MarkerOptions().position(myLocation).title("now Location"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
+    }
+
+    public static class CSVParser {
+
+        public static void parse(Context context) {
+            // AssetManagerの呼び出し
+            AssetManager assetManager = context.getResources().getAssets();
+            try {
+                // CSVファイルの読み込み
+                InputStream is = assetManager.open("shisetsu_hinan.csv");
+                InputStreamReader inputStreamReader = new InputStreamReader(is);
+                BufferedReader bufferReader = new BufferedReader(inputStreamReader);
+                String line = "";
+                while ((line = bufferReader.readLine()) != null) {
+                    // 各行が","で区切られていて4つの項目があるとする
+                    StringTokenizer st = new StringTokenizer(line, ",");
+                    String id = st.nextToken();
+                    String latitude = st.nextToken();
+                    String longitude = st.nextToken();
+                    String fourth = st.nextToken();
+
+                    Log.d("MyApp", "Parsed:" + id + latitude + longitude + fourth); //Android Monitorへのlogの表示
+                }
+                bufferReader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
