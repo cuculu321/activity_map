@@ -2,8 +2,10 @@ package com.example.mitsui.activity_map;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -12,6 +14,7 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.PermissionChecker;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -19,19 +22,13 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
-import android.content.Context;
-import android.content.res.AssetManager;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 import static com.example.mitsui.activity_map.MapsActivity.StrctTest.arrayStr;
 
@@ -86,19 +83,23 @@ public class MapsActivity extends FragmentActivity
         CSVParser parser = new CSVParser();
         Context context = getApplicationContext();
         parser.parse(context);
-        for(int i=0;i<arrayStr.size();i++) {
-            Log.d("Googlemap", "Pin:" + arrayStr.get(i).id + "," + arrayStr.get(i).latitude + ", " + arrayStr.get(i).longitude + "");
-            /*
-            if(Double.parseDouble(arrayStr.get(i).id) <= 5000){
-                mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(Double.parseDouble(arrayStr.get(i).latitude), Double.parseDouble(arrayStr.get(i).longitude)))
-                        .title(arrayStr.get(i).id));
-            }*/
+        for(int i=1;i<arrayStr.size();i++) {
+
+            Log.d("Googlemap", "Pin:" + arrayStr.get(i).id + "," + arrayStr.get(i).latitude + ", " + arrayStr.get(i).longitude);
+            double latitude = Double.parseDouble(arrayStr.get(i).latitude);
+            double longtitude = Double.parseDouble(arrayStr.get(i).longitude);
+            mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(latitude, longtitude))
+                    .title(arrayStr.get(i).id));
         }
         Log.d("addMarker", "Use:" + arrayStr.get(3).id + "," + arrayStr.get(3).latitude + ", " + arrayStr.get(3).longitude + "");
         mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(36.595839, 136.735955))
                 .title("Hello world"));
+
+        mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(Double.parseDouble(arrayStr.get(1).latitude), Double.parseDouble(arrayStr.get(1).longitude)))
+                .title(arrayStr.get(1).id));
 
     }
 
@@ -218,22 +219,24 @@ public class MapsActivity extends FragmentActivity
 
             try {
                 // CSVファイルの読み込み
-                InputStream is = assetManager.open("shisetsu_hinan.csv");
+                InputStream is = assetManager.open("shisetsu_hinan_mini.csv");
                 InputStreamReader inputStreamReader = new InputStreamReader(is);
                 BufferedReader bufferReader = new BufferedReader(inputStreamReader);
                 String line = "";
+
                 while ((line = bufferReader.readLine()) != null) {
-                    // 各行が","で区切られていて4つの項目があるとする
-                    StringTokenizer st = new StringTokenizer(line, ",");
-                    String id = st.nextToken();
-                    String latitude = st.nextToken();
-                    String longitude = st.nextToken();
-                    String fourth = st.nextToken();
+                    // 各行が","で区切られていて8つの項目があるとする
+                    String[] RowData = line.split(",");
+
+                    String id = RowData[0];
+                    String latitude = RowData[1];
+                    String longitude = RowData[2];
+
 
                     strt.setStructure(id, latitude, longitude);
 
-                    Log.d("MyApp", "Parsed:" + arrayStr.get(i).id+","+arrayStr.get(i).latitude+", "+arrayStr.get(i).longitude+""); //Android Monitorへのlogの表示
-                    i++;
+                    Log.d("MyApp", "Parsed:" + arrayStr.get(i).id+","+arrayStr.get(i).latitude+", "+arrayStr.get(i).longitude); //Android Monitorへのlogの表
+
                 }
                 bufferReader.close();
             } catch (IOException e) {
@@ -255,8 +258,8 @@ public class MapsActivity extends FragmentActivity
         /**
          * 構造体ArrayListに値をセット.
          */
-        public void setStructure(String name, String latitude, String longitude) {
-            arrayStr.add(setStr(name, latitude, longitude));
+        public void setStructure(String id, String latitude, String longitude) {
+            arrayStr.add(setStr(id, latitude, longitude));
         }
 
         public MyStructure setStr(String num1, String num2, String num3) {
@@ -264,6 +267,13 @@ public class MapsActivity extends FragmentActivity
             str.id = num1;
             str.latitude = num2;
             str.longitude = num3;
+            /*
+            str.genre = num4;
+            str.name = num5;
+            str.summary = num6;
+            str.postal = num7;
+            str.addres = num8;
+            */
             return str;
         }
 
@@ -271,6 +281,13 @@ public class MapsActivity extends FragmentActivity
             String id;
             String latitude;
             String longitude;
+/*
+            String genre;
+            String name;
+            String summary;
+            String postal;
+            String addres;
+*/
         }
     }
 }
