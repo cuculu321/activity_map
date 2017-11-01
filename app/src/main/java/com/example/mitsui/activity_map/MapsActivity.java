@@ -229,8 +229,8 @@ public class MapsActivity extends FragmentActivity
                     String[] RowData = line.split(",");
 
                     String id = RowData[0];
-                    String latitude = RowData[1];
-                    String longitude = RowData[2];
+                    String longitude = RowData[1];
+                    String latitude = RowData[2];
 
 
                     strt.setStructure(id, latitude, longitude);
