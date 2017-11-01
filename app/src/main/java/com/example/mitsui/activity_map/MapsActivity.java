@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.inputmethodservice.Keyboard;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -85,21 +86,14 @@ public class MapsActivity extends FragmentActivity
         parser.parse(context);
         for(int i=1;i<arrayStr.size();i++) {
 
-            Log.d("Googlemap", "Pin:" + arrayStr.get(i).id + "," + arrayStr.get(i).latitude + ", " + arrayStr.get(i).longitude);
+            Log.d("Googlemap", "Pin:" + arrayStr.get(i).id + "," +arrayStr.get(i).name+ "," + arrayStr.get(i).latitude + ", " + arrayStr.get(i).longitude);
             double latitude = Double.parseDouble(arrayStr.get(i).latitude);
             double longtitude = Double.parseDouble(arrayStr.get(i).longitude);
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(latitude, longtitude))
-                    .title(arrayStr.get(i).id));
+                    .title(arrayStr.get(i).name));
         }
-        Log.d("addMarker", "Use:" + arrayStr.get(3).id + "," + arrayStr.get(3).latitude + ", " + arrayStr.get(3).longitude + "");
-        mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(36.595839, 136.735955))
-                .title("Hello world"));
 
-        mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(Double.parseDouble(arrayStr.get(1).latitude), Double.parseDouble(arrayStr.get(1).longitude)))
-                .title(arrayStr.get(1).id));
 
     }
 
@@ -220,7 +214,7 @@ public class MapsActivity extends FragmentActivity
             try {
                 // CSVファイルの読み込み
                 InputStream is = assetManager.open("shisetsu_hinan_mini.csv");
-                InputStreamReader inputStreamReader = new InputStreamReader(is);
+                InputStreamReader inputStreamReader = new InputStreamReader(is, "SJIS");
                 BufferedReader bufferReader = new BufferedReader(inputStreamReader);
                 String line = "";
 
@@ -229,13 +223,14 @@ public class MapsActivity extends FragmentActivity
                     String[] RowData = line.split(",");
 
                     String id = RowData[0];
-                    String longitude = RowData[1];
-                    String latitude = RowData[2];
+                    String name = RowData[1];
+                    String longitude = RowData[2];
+                    String latitude = RowData[3];
 
 
-                    strt.setStructure(id, latitude, longitude);
+                    strt.setStructure(id, name, latitude, longitude);
 
-                    Log.d("MyApp", "Parsed:" + arrayStr.get(i).id+","+arrayStr.get(i).latitude+", "+arrayStr.get(i).longitude); //Android Monitorへのlogの表
+                    Log.d("MyApp", "Parsed:" + arrayStr.get(i).id+"," +arrayStr.get(i).name+"."+arrayStr.get(i).latitude+", "+arrayStr.get(i).longitude); //Android Monitorへのlogの表
 
                 }
                 bufferReader.close();
@@ -258,22 +253,17 @@ public class MapsActivity extends FragmentActivity
         /**
          * 構造体ArrayListに値をセット.
          */
-        public void setStructure(String id, String latitude, String longitude) {
-            arrayStr.add(setStr(id, latitude, longitude));
+        public void setStructure(String id, String name, String latitude, String longitude) {
+            arrayStr.add(setStr(id, name, latitude, longitude));
         }
 
-        public MyStructure setStr(String num1, String num2, String num3) {
+        public MyStructure setStr(String num1, String num2, String num3, String num4) {
             MyStructure str = new MyStructure();
             str.id = num1;
-            str.latitude = num2;
-            str.longitude = num3;
-            /*
-            str.genre = num4;
-            str.name = num5;
-            str.summary = num6;
-            str.postal = num7;
-            str.addres = num8;
-            */
+            str.latitude = num3;
+            str.longitude = num4;
+            str.name = num2;
+
             return str;
         }
 
@@ -281,13 +271,8 @@ public class MapsActivity extends FragmentActivity
             String id;
             String latitude;
             String longitude;
-/*
-            String genre;
             String name;
-            String summary;
-            String postal;
-            String addres;
-*/
+
         }
     }
 }
