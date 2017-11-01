@@ -22,6 +22,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -91,7 +92,7 @@ public class MapsActivity extends FragmentActivity
             double longtitude = Double.parseDouble(arrayStr.get(i).longitude);
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(latitude, longtitude))
-                    .title(arrayStr.get(i).name));
+                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));
         }
 
 
@@ -199,7 +200,6 @@ public class MapsActivity extends FragmentActivity
     private void setLocation(Location location) {
 
         LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
-        mMap.addMarker(new MarkerOptions().position(myLocation).title("now Location"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
     }
 
