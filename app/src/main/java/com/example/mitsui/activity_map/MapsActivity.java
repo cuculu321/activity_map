@@ -85,17 +85,18 @@ public class MapsActivity extends FragmentActivity
         CSVParser parser = new CSVParser();
         Context context = getApplicationContext();
         parser.parse(context);
+        ArrayList<Double> latitude = new ArrayList<Double>();
+        ArrayList<Double> longtitude = new ArrayList<Double>();
+
         for(int i=1;i<arrayStr.size();i++) {
 
-            Log.d("Googlemap", "Pin:" + arrayStr.get(i).id + "," +arrayStr.get(i).name+ "," + arrayStr.get(i).latitude + ", " + arrayStr.get(i).longitude);
-            double latitude = Double.parseDouble(arrayStr.get(i).latitude);
-            double longtitude = Double.parseDouble(arrayStr.get(i).longitude);
+            Log.d("Googlemap", "Pin:" + myLocationManager + arrayStr.get(i).id + "," +arrayStr.get(i).name+ "," + arrayStr.get(i).latitude + ", " + arrayStr.get(i).longitude);
+            latitude.add(Double.parseDouble(arrayStr.get(i).latitude));
+            longtitude.add(Double.parseDouble(arrayStr.get(i).longitude));
             mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(latitude, longtitude))
+                    .position(new LatLng(latitude.get(i-1), longtitude.get(i-1)))
                     .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));
         }
-
-
     }
 
     @Override
