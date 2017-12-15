@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.inputmethodservice.Keyboard;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -31,8 +30,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import static com.example.mitsui.activity_map.MapsActivity.StrctTest.arrayStr;
+import static com.example.mitsui.activity_map.R.*;
 
 public class MapsActivity extends FragmentActivity
         implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, LocationListener {
@@ -46,8 +47,8 @@ public class MapsActivity extends FragmentActivity
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        setContentView(layout.activity_maps);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(id.map);
         mapFragment.getMapAsync(this);
 
     }
@@ -57,6 +58,8 @@ public class MapsActivity extends FragmentActivity
     public void onMapReady(GoogleMap googleMap) {
 
         mMap = googleMap;
+        double my_Latitude = 10.0;
+        double my_Longtitude = 10;
 
         if (PermissionChecker.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -68,6 +71,8 @@ public class MapsActivity extends FragmentActivity
 
             if (lastLocation != null) {
                 setLocation(lastLocation);
+                my_Latitude = getLocation(lastLocation, "Latitude"); //現在地の緯度経度取得
+                my_Longtitude = getLocation(lastLocation, "Longtitude");
             }
 
             mMap.setMyLocationEnabled(true);
@@ -85,18 +90,35 @@ public class MapsActivity extends FragmentActivity
         CSVParser parser = new CSVParser();
         Context context = getApplicationContext();
         parser.parse(context);
+
         ArrayList<Double> latitude = new ArrayList<Double>();
         ArrayList<Double> longtitude = new ArrayList<Double>();
+        TreeSet<Double> LatitudetreeSet = new TreeSet<Double>();
+        TreeSet<Double> LongtitudetreeSet = new TreeSet<Double>();
 
         for(int i=1;i<arrayStr.size();i++) {
 
             Log.d("Googlemap", "Pin:" + myLocationManager + arrayStr.get(i).id + "," +arrayStr.get(i).name+ "," + arrayStr.get(i).latitude + ", " + arrayStr.get(i).longitude);
             latitude.add(Double.parseDouble(arrayStr.get(i).latitude));
             longtitude.add(Double.parseDouble(arrayStr.get(i).longitude));
+
+            LatitudetreeSet.add((double) latitude.get(i-1));
+            LongtitudetreeSet.add((double) longtitude.get(i-1));
+            /*mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(latitude.get(i-1), longtitude.get(i-1)))
+                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));*/
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(latitude.get(i-1), longtitude.get(i-1)))
                     .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));
+            /*
+            mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(LatitudetreeSet.floor(my_Location.latitude), LongtitudetreeSet.floor(my_Location.longitude)))
+                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp2")));*/
         }
+        /*LatitudetreeSet.subSet(my_Latitude-0.01,my_Latitude+0.01);
+        mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(LatitudetreeSet.floor(my_Latitude), LongtitudetreeSet.floor(my_Longtitude)))
+                .title(String.valueOf(LatitudetreeSet.floor(my_Latitude))));*/
     }
 
     @Override
@@ -123,6 +145,7 @@ public class MapsActivity extends FragmentActivity
 
         Toast.makeText(this, "LocationChanged実行", Toast.LENGTH_SHORT).show();
         setLocation(location);
+        double mylocation_latitude = getLocation(location, "Latitude");
         try {
             myLocationManager.removeUpdates(this);
         } catch (SecurityException e) {
@@ -202,6 +225,18 @@ public class MapsActivity extends FragmentActivity
 
         LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
+
+    }
+
+    private double getLocation(Location location, String want){
+        LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
+
+         if(want == "Latitude"){
+             return location.getLatitude();
+         }else{
+             return location.getLongitude();
+         }
     }
 
     public static class CSVParser {
