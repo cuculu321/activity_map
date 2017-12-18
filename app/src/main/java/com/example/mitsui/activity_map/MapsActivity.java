@@ -4,12 +4,14 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -19,10 +21,12 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.BufferedReader;
@@ -33,7 +37,8 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 
 import static com.example.mitsui.activity_map.MapsActivity.StrctTest.arrayStr;
-import static com.example.mitsui.activity_map.R.*;
+import static com.example.mitsui.activity_map.R.id;
+import static com.example.mitsui.activity_map.R.layout;
 
 public class MapsActivity extends FragmentActivity
         implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, LocationListener {
@@ -95,6 +100,7 @@ public class MapsActivity extends FragmentActivity
         ArrayList<Double> longtitude = new ArrayList<Double>();
         TreeSet<Double> LatitudetreeSet = new TreeSet<Double>();
         TreeSet<Double> LongtitudetreeSet = new TreeSet<Double>();
+        final LatLng start_position = new LatLng(my_Latitude, my_Longtitude);
 
         for(int i=1;i<arrayStr.size();i++) {
 
@@ -119,6 +125,21 @@ public class MapsActivity extends FragmentActivity
         mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(LatitudetreeSet.floor(my_Latitude), LongtitudetreeSet.floor(my_Longtitude)))
                 .title(String.valueOf(LatitudetreeSet.floor(my_Latitude))));*/
+        mMap.setOnMarkerClickListener(new OnMarkerClickListener() {
+                    @Override
+                    public boolean onMarkerClick(Marker marker) {
+                    // TODO Auto-generated method stub
+                    LatLng goal_position = marker.getPosition();
+                    Toast.makeText(getApplicationContext(), marker.getTitle(), Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.setClassName("com.google.android.apps.maps","com.google.android.maps.MapsActivity");
+                    intent.setData(Uri.parse("http://maps.google.com/maps?saddr="+start_position.latitude+","+start_position.longitude+"&daddr="+goal_position.latitude+","+goal_position.longitude));
+                    startActivity(intent);
+                return false;
+            }
+        });
+
     }
 
     @Override
