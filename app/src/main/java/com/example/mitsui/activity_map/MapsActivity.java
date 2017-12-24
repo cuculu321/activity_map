@@ -4,26 +4,31 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.inputmethodservice.Keyboard;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.PermissionChecker;
 import android.util.Log;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.BufferedReader;
@@ -31,8 +36,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.TreeSet;
 
 import static com.example.mitsui.activity_map.MapsActivity.StrctTest.arrayStr;
+import static com.example.mitsui.activity_map.R.id;
+import static com.example.mitsui.activity_map.R.layout;
 
 public class MapsActivity extends FragmentActivity
         implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, LocationListener {
@@ -40,16 +48,33 @@ public class MapsActivity extends FragmentActivity
     private static final int MY_LOCATION_REQUEST_CODE = 1000;
     private GoogleMap mMap;
     private LocationManager myLocationManager;
+    boolean switchcheck;
 
     @Override
 
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        setContentView(layout.activity_maps);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(id.map);
         mapFragment.getMapAsync(this);
 
+        Switch switchButton = (Switch) findViewById(id.Switch1);
+        // switchButtonのオンオフが切り替わった時の処理を設定
+        switchButton.setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener(){
+                    public void onCheckedChanged(CompoundButton comButton, boolean isChecked){
+                        // オンなら
+                        if(isChecked){
+                            switchcheck = true;
+                        }
+                        // オフなら
+                        else{
+                            switchcheck = false;
+                        }
+                    }
+                }
+        );
     }
 
     @Override
@@ -57,6 +82,8 @@ public class MapsActivity extends FragmentActivity
     public void onMapReady(GoogleMap googleMap) {
 
         mMap = googleMap;
+        double my_Latitude = 10.0;
+        double my_Longtitude = 10;
 
         if (PermissionChecker.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -68,6 +95,8 @@ public class MapsActivity extends FragmentActivity
 
             if (lastLocation != null) {
                 setLocation(lastLocation);
+                my_Latitude = getLocation(lastLocation, "Latitude"); //現在地の緯度経度取得
+                my_Longtitude = getLocation(lastLocation, "Longtitude");
             }
 
             mMap.setMyLocationEnabled(true);
@@ -78,28 +107,65 @@ public class MapsActivity extends FragmentActivity
             setDefaultLocation();
             confirmPermission();
         }
-
         //CSVの情報取得
         StrctTest strt = new StrctTest();
 
         CSVParser parser = new CSVParser();
         Context context = getApplicationContext();
         parser.parse(context);
+
+        ArrayList<Double> latitude = new ArrayList<Double>();
+        ArrayList<Double> longtitude = new ArrayList<Double>();
+        TreeSet<Double> LatitudetreeSet = new TreeSet<Double>();
+        TreeSet<Double> LongtitudetreeSet = new TreeSet<Double>();
+        final LatLng start_position = new LatLng(my_Latitude, my_Longtitude);
+
         for(int i=1;i<arrayStr.size();i++) {
 
-            Log.d("Googlemap", "Pin:" + arrayStr.get(i).id + "," +arrayStr.get(i).name+ "," + arrayStr.get(i).latitude + ", " + arrayStr.get(i).longitude);
-            double latitude = Double.parseDouble(arrayStr.get(i).latitude);
-            double longtitude = Double.parseDouble(arrayStr.get(i).longitude);
+            Log.d("Googlemap", "Pin:" + myLocationManager + arrayStr.get(i).id + "," +arrayStr.get(i).name+ "," + arrayStr.get(i).latitude + ", " + arrayStr.get(i).longitude);
+            latitude.add(Double.parseDouble(arrayStr.get(i).latitude));
+            longtitude.add(Double.parseDouble(arrayStr.get(i).longitude));
+
+            LatitudetreeSet.add((double) latitude.get(i-1));
+            LongtitudetreeSet.add((double) longtitude.get(i-1));
+            /*mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(latitude.get(i-1), longtitude.get(i-1)))
+                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));*/
             mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(latitude, longtitude))
-                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
+                    .position(new LatLng(latitude.get(i-1), longtitude.get(i-1)))
+                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));
+            /*
+            mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(LatitudetreeSet.floor(my_Location.latitude), LongtitudetreeSet.floor(my_Location.longitude)))
+                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp2")));*/
         }
+        /*LatitudetreeSet.subSet(my_Latitude-0.01,my_Latitude+0.01);
+        mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(LatitudetreeSet.floor(my_Latitude), LongtitudetreeSet.floor(my_Longtitude)))
+                .title(String.valueOf(LatitudetreeSet.floor(my_Latitude))));*/
+        mMap.setOnMarkerClickListener(new OnMarkerClickListener() {
+                @Override
+                public boolean onMarkerClick(Marker marker) {
+                    if(switchcheck == true) {
 
+                        // TODO Auto-generated method stub
+                        //LatLng goal_position = marker.getPosition();
+                        double my_Latitude = 0;
+                        double my_Longtitude = 0;
 
+                        Toast.makeText(getApplicationContext(), marker.getTitle(), Toast.LENGTH_LONG).show();
+                        Intent intent = new Intent();
+                        intent.setAction(Intent.ACTION_VIEW);
+                        intent.setClassName("com.google.android.apps.maps", "com.google.android.maps.MapsActivity");
+                        //intent.setData(Uri.parse("http://maps.google.com/maps?saddr="+start_position.latitude+","+start_position.longitude+"&daddr="+goal_position.latitude+","+goal_position.longitude));
+                        startActivity(intent);
+                    }
+                    return false;
+                }
+            });
     }
 
     @Override
-
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
 
         if (requestCode == MY_LOCATION_REQUEST_CODE) {
@@ -122,6 +188,7 @@ public class MapsActivity extends FragmentActivity
 
         Toast.makeText(this, "LocationChanged実行", Toast.LENGTH_SHORT).show();
         setLocation(location);
+        double mylocation_latitude = getLocation(location, "Latitude");
         try {
             myLocationManager.removeUpdates(this);
         } catch (SecurityException e) {
@@ -201,6 +268,20 @@ public class MapsActivity extends FragmentActivity
 
         LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
+
+    }
+
+    private double getLocation(Location location, String want) {
+        if (location.getLatitude() != 0){
+        LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
+        }
+
+         if(want == "Latitude"){
+             return location.getLatitude();
+         }else{
+             return location.getLongitude();
+         }
     }
 
     public static class CSVParser {
