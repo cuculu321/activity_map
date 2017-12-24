@@ -17,6 +17,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.PermissionChecker;
 import android.util.Log;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -46,6 +48,7 @@ public class MapsActivity extends FragmentActivity
     private static final int MY_LOCATION_REQUEST_CODE = 1000;
     private GoogleMap mMap;
     private LocationManager myLocationManager;
+    boolean switchcheck;
 
     @Override
 
@@ -56,6 +59,22 @@ public class MapsActivity extends FragmentActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(id.map);
         mapFragment.getMapAsync(this);
 
+        Switch switchButton = (Switch) findViewById(id.Switch1);
+        // switchButtonのオンオフが切り替わった時の処理を設定
+        switchButton.setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener(){
+                    public void onCheckedChanged(CompoundButton comButton, boolean isChecked){
+                        // オンなら
+                        if(isChecked){
+                            switchcheck = true;
+                        }
+                        // オフなら
+                        else{
+                            switchcheck = false;
+                        }
+                    }
+                }
+        );
     }
 
     @Override
@@ -88,7 +107,6 @@ public class MapsActivity extends FragmentActivity
             setDefaultLocation();
             confirmPermission();
         }
-
         //CSVの情報取得
         StrctTest strt = new StrctTest();
 
@@ -126,24 +144,28 @@ public class MapsActivity extends FragmentActivity
                 .position(new LatLng(LatitudetreeSet.floor(my_Latitude), LongtitudetreeSet.floor(my_Longtitude)))
                 .title(String.valueOf(LatitudetreeSet.floor(my_Latitude))));*/
         mMap.setOnMarkerClickListener(new OnMarkerClickListener() {
-                    @Override
-                    public boolean onMarkerClick(Marker marker) {
-                    // TODO Auto-generated method stub
-                    LatLng goal_position = marker.getPosition();
-                    Toast.makeText(getApplicationContext(), marker.getTitle(), Toast.LENGTH_LONG).show();
-                    Intent intent = new Intent();
-                    intent.setAction(Intent.ACTION_VIEW);
-                    intent.setClassName("com.google.android.apps.maps","com.google.android.maps.MapsActivity");
-                    intent.setData(Uri.parse("http://maps.google.com/maps?saddr="+start_position.latitude+","+start_position.longitude+"&daddr="+goal_position.latitude+","+goal_position.longitude));
-                    startActivity(intent);
-                return false;
-            }
-        });
+                @Override
+                public boolean onMarkerClick(Marker marker) {
+                    if(switchcheck == true) {
 
+                        // TODO Auto-generated method stub
+                        //LatLng goal_position = marker.getPosition();
+                        double my_Latitude = 0;
+                        double my_Longtitude = 0;
+
+                        Toast.makeText(getApplicationContext(), marker.getTitle(), Toast.LENGTH_LONG).show();
+                        Intent intent = new Intent();
+                        intent.setAction(Intent.ACTION_VIEW);
+                        intent.setClassName("com.google.android.apps.maps", "com.google.android.maps.MapsActivity");
+                        //intent.setData(Uri.parse("http://maps.google.com/maps?saddr="+start_position.latitude+","+start_position.longitude+"&daddr="+goal_position.latitude+","+goal_position.longitude));
+                        startActivity(intent);
+                    }
+                    return false;
+                }
+            });
     }
 
     @Override
-
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
 
         if (requestCode == MY_LOCATION_REQUEST_CODE) {
@@ -249,9 +271,11 @@ public class MapsActivity extends FragmentActivity
 
     }
 
-    private double getLocation(Location location, String want){
+    private double getLocation(Location location, String want) {
+        if (location.getLatitude() != 0){
         LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
+        }
 
          if(want == "Latitude"){
              return location.getLatitude();
