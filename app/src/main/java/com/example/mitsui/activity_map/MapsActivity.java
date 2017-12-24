@@ -92,7 +92,7 @@ public class MapsActivity extends FragmentActivity
             double longtitude = Double.parseDouble(arrayStr.get(i).longitude);
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(latitude, longtitude))
-                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker.png")));
+                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
         }
 
 
