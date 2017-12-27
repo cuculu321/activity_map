@@ -2,11 +2,13 @@ package com.example.mitsui.activity_map;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -36,14 +38,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import static com.example.mitsui.activity_map.MapsActivity.StrctTest.arrayStr;
 import static com.example.mitsui.activity_map.R.id;
 import static com.example.mitsui.activity_map.R.layout;
+import com.example.mitsui.activity_map.MapDBHelper;
 
 public class MapsActivity extends FragmentActivity
-        implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, LocationListener {
+        implements OnMapReadyCallback, ActivityCompat.OnRequestPermissionsResultCallback, LocationListener{
 
     private static final int MY_LOCATION_REQUEST_CODE = 1000;
     private GoogleMap mMap;
@@ -84,6 +90,9 @@ public class MapsActivity extends FragmentActivity
         mMap = googleMap;
         double my_Latitude = 10.0;
         double my_Longtitude = 10;
+        Context context = getApplicationContext();
+        MapDBHelper helper = new MapDBHelper(context);
+        SQLiteDatabase database = helper.getReadableDatabase();
 
         if (PermissionChecker.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -107,17 +116,19 @@ public class MapsActivity extends FragmentActivity
             setDefaultLocation();
             confirmPermission();
         }
+
         //CSVの情報取得
         StrctTest strt = new StrctTest();
 
         CSVParser parser = new CSVParser();
-        Context context = getApplicationContext();
         parser.parse(context);
 
         ArrayList<Double> latitude = new ArrayList<Double>();
         ArrayList<Double> longtitude = new ArrayList<Double>();
         TreeSet<Double> LatitudetreeSet = new TreeSet<Double>();
         TreeSet<Double> LongtitudetreeSet = new TreeSet<Double>();
+
+        NavigableMap<Double, Integer> map = new TreeMap<Double, Integer>();
         final LatLng start_position = new LatLng(my_Latitude, my_Longtitude);
 
         for(int i=1;i<arrayStr.size();i++) {
@@ -128,16 +139,31 @@ public class MapsActivity extends FragmentActivity
 
             LatitudetreeSet.add((double) latitude.get(i-1));
             LongtitudetreeSet.add((double) longtitude.get(i-1));
+            map.put(Double.parseDouble(arrayStr.get(i).latitude),Integer.parseInt(arrayStr.get(i).id));
             /*mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(latitude.get(i-1), longtitude.get(i-1)))
                     .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));*/
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(latitude.get(i-1), longtitude.get(i-1)))
-                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));
+                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
             /*
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(LatitudetreeSet.floor(my_Location.latitude), LongtitudetreeSet.floor(my_Location.longitude)))
                     .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp2")));*/
+
+            //データベースへの追加
+            ContentValues values = new ContentValues();
+            values.put("id", Integer.parseInt(arrayStr.get(i).id));
+            values.put("name", arrayStr.get(i-1).name);
+            values.put("lat", Double.parseDouble(arrayStr.get(i).latitude));
+            values.put("lng", Double.parseDouble(arrayStr.get(i).longitude));
+
+        }
+        double next = 136.7;
+        Map.Entry<Double, Integer> entry;
+        while ((entry = map.higherEntry(next)) != null) {
+            System.out.printf("key=%d value=%s\n", entry.getKey(), entry.getKey());
+            next = entry.getKey();
         }
         /*LatitudetreeSet.subSet(my_Latitude-0.01,my_Latitude+0.01);
         mMap.addMarker(new MarkerOptions()
