@@ -157,12 +157,27 @@ public class MapsActivity extends FragmentActivity
             }
         }
 
-
-        Cursor db_cursor = database.rawQuery("select id,name,lat,lng from hinanjo", null);
-        while(db_cursor.moveToNext()){
+        Cursor all_cursor = database.rawQuery("select id,name,lat,lng from hinanjo", null);
+        /*while(all_cursor.moveToNext()){
             mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(db_cursor.getDouble(2), db_cursor.getDouble(3)))
-                    .title(db_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
+                    .position(new LatLng(all_cursor.getDouble(2), all_cursor.getDouble(3)))
+                    .title(all_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
+        }*/
+
+        Cursor neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng between ? and ?",
+                new String[]{String.valueOf(my_Longtitude -0.2),  String.valueOf(my_Longtitude +0.2)});
+        while(neigborhood_cursor.moveToNext()){
+            mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(neigborhood_cursor.getDouble(2), neigborhood_cursor.getDouble(3)))
+                    .title(neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));
+        }
+
+        Cursor not_neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng not between ? and ?",
+                new String[]{String.valueOf(my_Longtitude -0.2),  String.valueOf(my_Longtitude +0.2)});
+        while(not_neigborhood_cursor.moveToNext()){
+            mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(not_neigborhood_cursor.getDouble(2), not_neigborhood_cursor.getDouble(3)))
+                    .title(not_neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
         }
 
         database.close();
