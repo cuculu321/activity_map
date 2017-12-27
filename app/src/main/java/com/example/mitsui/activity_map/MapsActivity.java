@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Criteria;
 import android.location.Location;
@@ -125,10 +126,7 @@ public class MapsActivity extends FragmentActivity
 
         ArrayList<Double> latitude = new ArrayList<Double>();
         ArrayList<Double> longtitude = new ArrayList<Double>();
-        TreeSet<Double> LatitudetreeSet = new TreeSet<Double>();
-        TreeSet<Double> LongtitudetreeSet = new TreeSet<Double>();
 
-        NavigableMap<Double, Integer> map = new TreeMap<Double, Integer>();
         final LatLng start_position = new LatLng(my_Latitude, my_Longtitude);
 
         for(int i=1;i<arrayStr.size();i++) {
@@ -137,15 +135,10 @@ public class MapsActivity extends FragmentActivity
             latitude.add(Double.parseDouble(arrayStr.get(i).latitude));
             longtitude.add(Double.parseDouble(arrayStr.get(i).longitude));
 
-            LatitudetreeSet.add((double) latitude.get(i-1));
-            LongtitudetreeSet.add((double) longtitude.get(i-1));
-            map.put(Double.parseDouble(arrayStr.get(i).latitude),Integer.parseInt(arrayStr.get(i).id));
             /*mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(latitude.get(i-1), longtitude.get(i-1)))
                     .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));*/
-            mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(latitude.get(i-1), longtitude.get(i-1)))
-                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
+
             /*
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(LatitudetreeSet.floor(my_Location.latitude), LongtitudetreeSet.floor(my_Location.longitude)))
@@ -154,17 +147,26 @@ public class MapsActivity extends FragmentActivity
             //データベースへの追加
             ContentValues values = new ContentValues();
             values.put("id", Integer.parseInt(arrayStr.get(i).id));
-            values.put("name", arrayStr.get(i-1).name);
+            values.put("name", arrayStr.get(i).name);
             values.put("lat", Double.parseDouble(arrayStr.get(i).latitude));
             values.put("lng", Double.parseDouble(arrayStr.get(i).longitude));
 
+            long id = database.insert("hinanjo", null, values);
+            if (id == -1){
+                //失敗した失敗した場合
+            }
         }
-        double next = 136.7;
-        Map.Entry<Double, Integer> entry;
-        while ((entry = map.higherEntry(next)) != null) {
-            System.out.printf("key=%d value=%s\n", entry.getKey(), entry.getKey());
-            next = entry.getKey();
+
+
+        Cursor db_cursor = database.rawQuery("select id,name,lat,lng from hinanjo", null);
+        while(db_cursor.moveToNext()){
+            mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(db_cursor.getDouble(2), db_cursor.getDouble(3)))
+                    .title(db_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
         }
+
+        database.close();
+
         /*LatitudetreeSet.subSet(my_Latitude-0.01,my_Latitude+0.01);
         mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(LatitudetreeSet.floor(my_Latitude), LongtitudetreeSet.floor(my_Longtitude)))
