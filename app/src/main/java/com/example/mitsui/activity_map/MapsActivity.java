@@ -39,10 +39,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import static com.example.mitsui.activity_map.MapsActivity.StrctTest.arrayStr;
 import static com.example.mitsui.activity_map.R.id;
@@ -106,8 +102,6 @@ public class MapsActivity extends FragmentActivity
 
             if (lastLocation != null) {
                 setLocation(lastLocation);
-                my_Latitude = getLocation(lastLocation, "Latitude"); //現在地の緯度経度取得
-                my_Longtitude = getLocation(lastLocation, "Longtitude");
             }
 
             mMap.setMyLocationEnabled(true);
@@ -136,15 +130,6 @@ public class MapsActivity extends FragmentActivity
             latitude.add(Double.parseDouble(arrayStr.get(i).latitude));
             longtitude.add(Double.parseDouble(arrayStr.get(i).longitude));
 
-            /*mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(latitude.get(i-1), longtitude.get(i-1)))
-                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));*/
-
-            /*
-            mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(LatitudetreeSet.floor(my_Location.latitude), LongtitudetreeSet.floor(my_Location.longitude)))
-                    .title(arrayStr.get(i).name).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp2")));*/
-
             //データベースへの追加
             ContentValues values = new ContentValues();
             values.put("id", Integer.parseInt(arrayStr.get(i).id));
@@ -159,29 +144,7 @@ public class MapsActivity extends FragmentActivity
         }
 
         Cursor all_cursor = database.rawQuery("select id,name,lat,lng from hinanjo", null);
-        /*while(all_cursor.moveToNext()){
-            mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(all_cursor.getDouble(2), all_cursor.getDouble(3)))
-                    .title(all_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
-        }*/
-
-        Cursor neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng between ? and ?",
-                new String[]{String.valueOf(my_Longtitude -0.2),  String.valueOf(my_Longtitude +0.2)});
-        while(neigborhood_cursor.moveToNext()){
-            mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(neigborhood_cursor.getDouble(2), neigborhood_cursor.getDouble(3)))
-                    .title(neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker_orange.png")));
-        }
-
-        Cursor not_neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng not between ? and ?",
-                new String[]{String.valueOf(my_Longtitude -0.2),  String.valueOf(my_Longtitude +0.2)});
-        while(not_neigborhood_cursor.moveToNext()){
-            mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(not_neigborhood_cursor.getDouble(2), not_neigborhood_cursor.getDouble(3)))
-                    .title(not_neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
-        }
-
-        database.close();
+        dropmarker(mMap);
 
         /*LatitudetreeSet.subSet(my_Latitude-0.01,my_Latitude+0.01);
         mMap.addMarker(new MarkerOptions()
@@ -233,7 +196,6 @@ public class MapsActivity extends FragmentActivity
 
         Toast.makeText(this, "LocationChanged実行", Toast.LENGTH_SHORT).show();
         setLocation(location);
-        double mylocation_latitude = getLocation(location, "Latitude");
         try {
             myLocationManager.removeUpdates(this);
         } catch (SecurityException e) {
@@ -316,17 +278,37 @@ public class MapsActivity extends FragmentActivity
 
     }
 
-    private double getLocation(Location location, String want) {
-        if (location.getLatitude() != 0){
-        LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
+    public void dropmarker(GoogleMap googleMap){
+        Context context = getApplicationContext();
+        MapDBHelper helper = new MapDBHelper(context);
+        SQLiteDatabase database = helper.getReadableDatabase();
+
+        Cursor neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng between ? and ?",
+                new String[]{String.valueOf(myLocation.longitude -0.2),  String.valueOf(myLocation.longitude +0.2)});
+
+        try {
+            while (neigborhood_cursor.moveToNext()) {
+                mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(neigborhood_cursor.getDouble(2), neigborhood_cursor.getDouble(3)))
+                        .title(neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker_orange.png")));
+            }
+        }finally {
+
         }
 
-         if(want == "Latitude"){
-             return location.getLatitude();
-         }else{
-             return location.getLongitude();
-         }
+        Cursor not_neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng not between ? and ?",
+                new String[]{String.valueOf(myLocation.longitude -0.2),  String.valueOf(myLocation.longitude +0.2)});
+        try {
+            while (not_neigborhood_cursor.moveToNext()) {
+                mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(not_neigborhood_cursor.getDouble(2), not_neigborhood_cursor.getDouble(3)))
+                        .title(not_neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
+            }
+        }finally {
+
+        }
+        database.close();
+
     }
 
     public static class CSVParser {
@@ -339,7 +321,7 @@ public class MapsActivity extends FragmentActivity
 
             try {
                 // CSVファイルの読み込み
-                InputStream is = assetManager.open("shisetsu_hinan_mini.csv");
+                InputStream is = assetManager.open("use_hinanjo.csv");
                 InputStreamReader inputStreamReader = new InputStreamReader(is, "SJIS");
                 BufferedReader bufferReader = new BufferedReader(inputStreamReader);
                 String line = "";
