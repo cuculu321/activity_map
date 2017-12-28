@@ -56,6 +56,7 @@ public class MapsActivity extends FragmentActivity
     private GoogleMap mMap;
     private LocationManager myLocationManager;
     boolean switchcheck;
+    LatLng myLocation = new LatLng(1.0,1.0);
 
     @Override
 
@@ -169,7 +170,7 @@ public class MapsActivity extends FragmentActivity
         while(neigborhood_cursor.moveToNext()){
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(neigborhood_cursor.getDouble(2), neigborhood_cursor.getDouble(3)))
-                    .title(neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinan_jo.bmp")));
+                    .title(neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker_orange.png")));
         }
 
         Cursor not_neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng not between ? and ?",
@@ -195,6 +196,7 @@ public class MapsActivity extends FragmentActivity
                         LatLng goal_position = marker.getPosition();
                         double my_Latitude = 0;
                         double my_Longtitude = 0;
+                        LatLng start_position = myLocation;
 
                         Toast.makeText(getApplicationContext(), marker.getTitle(), Toast.LENGTH_LONG).show();
                         Intent intent = new Intent();
@@ -309,7 +311,7 @@ public class MapsActivity extends FragmentActivity
 
     private void setLocation(Location location) {
 
-        LatLng myLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        myLocation = new LatLng(location.getLatitude(), location.getLongitude());
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
 
     }
