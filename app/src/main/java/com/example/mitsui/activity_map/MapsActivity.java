@@ -311,8 +311,10 @@ public class MapsActivity extends FragmentActivity
         SQLiteDatabase database = helper.getReadableDatabase();
 
 
-        Cursor neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng between ? and ?",
-                new String[]{String.valueOf(myLocation.longitude -0.2),  String.valueOf(myLocation.longitude +0.2)});
+        /*Cursor neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng between ? and ?",
+                new String[]{String.valueOf(myLocation.longitude -0.2),  String.valueOf(myLocation.longitude +0.2)});*/
+        Cursor neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where (lng between ? and ?) and (lat between ? and ?)",
+                new String[]{String.valueOf(myLocation.longitude -0.02),  String.valueOf(myLocation.longitude +0.02),String.valueOf(myLocation.latitude -0.02),String.valueOf(myLocation.latitude +0.02)});
 
         try {
             while (neigborhood_cursor.moveToNext()) {
@@ -324,8 +326,11 @@ public class MapsActivity extends FragmentActivity
 
         }
 
-        Cursor not_neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng not between ? and ?",
-                new String[]{String.valueOf(myLocation.longitude -0.2),  String.valueOf(myLocation.longitude +0.2)});
+        /*Cursor not_neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng not between ? and ?",
+                new String[]{String.valueOf(myLocation.longitude -0.2),  String.valueOf(myLocation.longitude +0.2)});*/
+        Cursor not_neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where (lng not between ? and ?) or (lat not between ? and ?)",
+                new String[]{String.valueOf(myLocation.longitude -0.02),  String.valueOf(myLocation.longitude +0.02),String.valueOf(myLocation.latitude -0.02),String.valueOf(myLocation.latitude +0.02)});
+
         try {
             while (not_neigborhood_cursor.moveToNext()) {
             mMarkerGreen.add(mMap.addMarker(new MarkerOptions()
