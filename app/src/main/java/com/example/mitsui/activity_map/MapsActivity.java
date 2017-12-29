@@ -20,6 +20,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.PermissionChecker;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -39,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.example.mitsui.activity_map.MapsActivity.StrctTest.arrayStr;
 import static com.example.mitsui.activity_map.R.id;
@@ -53,6 +56,9 @@ public class MapsActivity extends FragmentActivity
     private LocationManager myLocationManager;
     boolean switchcheck;
     LatLng myLocation = new LatLng(1.0,1.0);
+    private List<Marker> mMarkerGreen = new ArrayList<Marker>();
+    private List<Marker> mMarkerOrange = new ArrayList<Marker>();
+
 
     @Override
 
@@ -63,6 +69,7 @@ public class MapsActivity extends FragmentActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(id.map);
         mapFragment.getMapAsync(this);
 
+        //Switchの設定
         Switch switchButton = (Switch) findViewById(id.Switch1);
         // switchButtonのオンオフが切り替わった時の処理を設定
         switchButton.setOnCheckedChangeListener(
@@ -106,7 +113,7 @@ public class MapsActivity extends FragmentActivity
 
             mMap.setMyLocationEnabled(true);
             Toast.makeText(this, "Provider=" + provider, Toast.LENGTH_SHORT).show();
-            myLocationManager.requestLocationUpdates(provider, 0, 0, this);
+            myLocationManager.requestLocationUpdates(provider, 5000, 10, this);
         } else {
 
             setDefaultLocation();
@@ -142,9 +149,20 @@ public class MapsActivity extends FragmentActivity
                 //失敗した失敗した場合
             }
         }
+        database.close();
 
-        Cursor all_cursor = database.rawQuery("select id,name,lat,lng from hinanjo", null);
         dropmarker(mMap);
+
+        //buttonの設定
+        Button button = findViewById(id.button1);
+        //buttonが押されたときの処理を設定
+        button.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){
+                //マーカーの呼び出し
+                dropmarker(mMap);
+            }
+        });
+
 
         /*LatitudetreeSet.subSet(my_Latitude-0.01,my_Latitude+0.01);
         mMap.addMarker(new MarkerOptions()
@@ -279,18 +297,28 @@ public class MapsActivity extends FragmentActivity
     }
 
     public void dropmarker(GoogleMap googleMap){
+
+        for (int i = 0 ; i < mMarkerOrange.size() ; i++){
+            mMarkerOrange.get(i).remove();
+        }
+        for (int i = 0 ; i < mMarkerGreen.size() ; i++){
+            mMarkerGreen.get(i).remove();
+        }
+        mMarkerOrange.clear();
+        mMarkerGreen.clear();
         Context context = getApplicationContext();
         MapDBHelper helper = new MapDBHelper(context);
         SQLiteDatabase database = helper.getReadableDatabase();
+
 
         Cursor neigborhood_cursor = database.rawQuery("select id, name, lat, lng from hinanjo where lng between ? and ?",
                 new String[]{String.valueOf(myLocation.longitude -0.2),  String.valueOf(myLocation.longitude +0.2)});
 
         try {
             while (neigborhood_cursor.moveToNext()) {
-                mMap.addMarker(new MarkerOptions()
+            mMarkerOrange.add(mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(neigborhood_cursor.getDouble(2), neigborhood_cursor.getDouble(3)))
-                        .title(neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker_orange.png")));
+                        .title(neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker_orange.png"))));
             }
         }finally {
 
@@ -300,9 +328,9 @@ public class MapsActivity extends FragmentActivity
                 new String[]{String.valueOf(myLocation.longitude -0.2),  String.valueOf(myLocation.longitude +0.2)});
         try {
             while (not_neigborhood_cursor.moveToNext()) {
-                mMap.addMarker(new MarkerOptions()
+            mMarkerGreen.add(mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(not_neigborhood_cursor.getDouble(2), not_neigborhood_cursor.getDouble(3)))
-                        .title(not_neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png")));
+                        .title(not_neigborhood_cursor.getString(1)).icon(BitmapDescriptorFactory.fromAsset("hinanjo_marker2.png"))));
             }
         }finally {
 
