@@ -201,7 +201,7 @@ public class MapsActivity extends FragmentActivity
 
                 mMap.setMyLocationEnabled(true);
                 myLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-                myLocationManager.requestLocationUpdates(getProvider(), 0, 0, this);
+                myLocationManager.requestLocationUpdates(getProvider(), 5000, 10, this);
             } else {
                 Toast.makeText(this, "権限を取得できませんでした。", Toast.LENGTH_SHORT).show();
             }
