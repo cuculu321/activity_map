@@ -214,10 +214,13 @@ public class MapsActivity extends FragmentActivity
 
         Toast.makeText(this, "LocationChanged実行", Toast.LENGTH_SHORT).show();
         setLocation(location);
-        try {
-            myLocationManager.removeUpdates(this);
-        } catch (SecurityException e) {
-        }
+    }
+
+    private void setLocation(Location location) {
+
+        myLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
+
     }
 
     @Override
@@ -286,14 +289,6 @@ public class MapsActivity extends FragmentActivity
 
         LatLng tokyo = new LatLng(35.681298, 139.766247);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(tokyo, 18));
-    }
-
-
-    private void setLocation(Location location) {
-
-        myLocation = new LatLng(location.getLatitude(), location.getLongitude());
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 18));
-
     }
 
     public void dropmarker(GoogleMap googleMap){
